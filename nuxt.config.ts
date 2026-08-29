@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   nitro: { experimental: { wasm: false } },
   features: { inlineStyles: false },
   app: {
-    baseURL: '/llm/',
+    baseURL: '/',
     head: {
       title: 'LLM Learning Hub',
       meta: [
@@ -16,7 +16,7 @@ export default defineNuxtConfig({
       ],
       htmlAttrs: { lang: 'en' },
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/llm/favicon.svg' }
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
       ]
     }
   }
