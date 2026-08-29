@@ -1,0 +1,44 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "machine-learning": {
+    whatIs: "Machine learning is the practice of building systems that learn patterns from data rather than being explicitly programmed. It spans supervised, unsupervised, and reinforcement learning.",
+    whereUsed: "LLMs are a subset of ML — they learn to predict the next token from vast text corpora; recommendation systems, vision models, and speech recognition all use ML.",
+    howToBuild: "Build a linear regression model with `torch.nn.Linear(1,1)`, train it on synthetic data with MSE loss and SGD, and plot the fitted line — this is the minimal ML loop.",
+  },
+  "dataset": {
+    whatIs: "A dataset is the collection of examples a model learns from, typically split into training, validation, and test sets. Quality, size, and diversity of the dataset determine model performance.",
+    whereUsed: "GPT-3 was trained on Common Crawl, WebText2, books, and Wikipedia; Llama 3 used 15T tokens curated from web, code, and multilingual sources.",
+    howToBuild: "Use `torch.utils.data.Dataset` and `DataLoader` to wrap a tensor or folder of files, set `batch_size` and `shuffle=True`, and iterate batches in a training loop.",
+  },
+  "training": {
+    whatIs: "Training is the iterative process of feeding data through a model, computing loss, calculating gradients via backprop, and updating weights with an optimizer. The goal is to minimize the loss.",
+    whereUsed: "LLM pretraining runs forward, backward, and optimizer steps billions of times; fine-tuning (SFT/RLHF) trains on narrower datasets to align model behavior.",
+    howToBuild: "Write a loop: `for x,y in loader: opt.zero_grad(); loss = model(x); loss.backward(); opt.step()` — this is the training loop used at every scale.",
+  },
+  "validation": {
+    whatIs: "Validation is evaluating the model on a held-out dataset during training to monitor generalization and tune hyperparameters. It prevents overfitting and guides early stopping.",
+    whereUsed: "LLM developers hold out evaluation sets (MMLU, HumanEval, GSM8K) to track model capability across training checkpoints; validation perplexity guides learning rate schedules.",
+    howToBuild: "After each epoch, switch model to `model.eval()` and `torch.no_grad()`, compute loss on the validation DataLoader, and log it to compare with training loss.",
+  },
+  "inference": {
+    whatIs: "Inference is running a trained model on new inputs to produce predictions, without updating weights. It is the deployment phase of the ML lifecycle.",
+    whereUsed: "ChatGPT serving, Claude API calls, and local Llama inference all run forward passes only; techniques like KV-cache, quantization, and batching optimize inference throughput.",
+    howToBuild: "Load a trained model with `model.eval()`, wrap inference in `torch.no_grad()`, pass a single input tensor, and decode the output — measure latency with `time.perf_counter()`.",
+  },
+  "loss": {
+    whatIs: "A loss function measures the difference between a model's prediction and the true target, producing a scalar to minimize. It defines what the model is optimizing toward.",
+    whereUsed: "LLMs use cross-entropy loss over the vocabulary; regression tasks use MSE; contrastive learning uses triplet or InfoNCE loss for embedding models.",
+    howToBuild: "Use `torch.nn.CrossEntropyLoss()` with logits and integer labels, or `F.mse_loss` for regression, and observe how `.backward()` populates gradients for every parameter.",
+  },
+  "overfitting": {
+    whatIs: "Overfitting occurs when a model memorizes training data patterns — including noise — and fails to generalize to unseen data. It shows up as low training loss but high validation loss.",
+    whereUsed: "Small LLM fine-tunes easily overfit narrow datasets; without regularization, deep models can memorize entire training sequences verbatim, hurting downstream evals.",
+    howToBuild: "Train a high-capacity MLP on a tiny dataset, plot train vs. validation loss, and watch the gap widen — then add dropout and weight decay to close it.",
+  },
+  "generalization": {
+    whatIs: "Generalization is a model's ability to perform well on unseen data, not just the training set. It is the ultimate goal of ML and depends on data diversity, model capacity, and regularization.",
+    whereUsed: "GPT-4 generalizes to novel reasoning tasks because it was trained on diverse data at scale; benchmarks like MMLU and GPQA measure generalization to held-out distributions.",
+    howToBuild: "Compare test-set accuracy across models trained with different dropout and data augmentation levels to empirically observe which regularizers improve generalization.",
+  },
+};

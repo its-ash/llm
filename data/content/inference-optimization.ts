@@ -1,0 +1,14 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "memory-optimization": {
+    whatIs: "Memory optimisation for inference reduces VRAM consumption via KV-cache quantisation, weight quantisation (int8/int4), PagedAttention, and activation offloading to fit larger models or batches.",
+    whereUsed: "vLLM PagedAttention, `bitsandbytes` int4/int8 loading, and `llama.cpp` GGUF quantisation are standard; TensorRT-LLM uses INT8 KV cache for Llama-3-70B on a single H100.",
+    howToBuild: "Load a model with `BitsAndBytesConfig(load_in_4bit=True)`, compare `torch.cuda.memory_allocated()` vs fp16, and run generation to verify quality and memory savings.",
+  },
+  "compute-optimization": {
+    whatIs: "Compute optimisation for inference maximises GPU FLOPs utilisation via kernel fusion, FlashAttention, tensor cores (bf16/fp8), and operator-level compilation to reduce latency and cost.",
+    whereUsed: "TensorRT-LLM compiles Llama/Mistral into fused kernels; `torch.compile(model, mode=\"max-autotune\")` and vLLM's custom CUDA kernels improve compute throughput on A100/H100.",
+    howToBuild: "Wrap the model with `torch.compile(model, mode=\"max-autotune-no-cudagraphs\")`, warm up with a dummy forward, and benchmark generation tokens/s against the eager baseline.",
+  },
+};

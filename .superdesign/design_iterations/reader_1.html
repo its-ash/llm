@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Codex — Reading on Language Models</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap');
+  body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+  .font-serif-display { font-family: 'Source Serif 4', Georgia, serif; }
+  ::selection { background: #000; color: #fff; }
+</style>
+</head>
+<body class="bg-white text-black antialiased">
+
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-black focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:z-50">Skip to content</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="border-b border-black/10 sticky top-0 bg-white/90 backdrop-blur z-40">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16">
+      <div class="h-16 md:h-24 flex items-center justify-between">
+        <a href="#" class="flex items-center gap-4 shrink-0">
+          <span class="relative w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-black flex items-center justify-center">
+            <span class="absolute inset-0 m-auto w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-black"></span>
+            <span class="absolute inset-0 rounded-full border border-black/30 scale-[1.4]"></span>
+          </span>
+          <span class="font-serif-display text-xl md:text-2xl tracking-tight">Codex</span>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-8 lg:gap-12 text-sm">
+          <a href="#library" class="hover:opacity-60 transition-opacity">Library</a>
+          <a href="#featured" class="hover:opacity-60 transition-opacity">Featured</a>
+          <a href="#" class="hover:opacity-60 transition-opacity">Topics</a>
+          <a href="#" class="hover:opacity-60 transition-opacity">About</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+          <button class="hidden sm:inline-flex items-center rounded-full border border-black px-6 py-2 text-sm hover:bg-black hover:text-white transition-colors">
+            Subscribe
+          </button>
+          <button id="menuBtn" aria-label="Toggle menu" aria-expanded="false" class="md:hidden w-8 h-8 flex flex-col items-center justify-center gap-1.5">
+            <span class="block w-6 h-px bg-black"></span>
+            <span class="block w-6 h-px bg-black"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <nav id="mobileMenu" class="hidden md:hidden border-t border-black/10 px-4 py-4 flex flex-col gap-4 text-sm bg-white">
+      <a href="#library" class="py-2">Library</a>
+      <a href="#featured" class="py-2">Featured</a>
+      <a href="#" class="py-2">Topics</a>
+      <a href="#" class="py-2">About</a>
+      <button class="mt-2 w-full rounded-full border border-black px-6 py-2">Subscribe</button>
+    </nav>
+  </header>
+
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16">
+    <div class="lg:grid lg:grid-cols-[240px_1fr] lg:gap-16">
+
+      <!-- ============ SIDEBAR ============ -->
+      <aside class="hidden lg:block border-r border-black/10 pr-8 py-16 sticky top-24 h-fit">
+        <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-6">Browse Topics</p>
+        <ul class="flex flex-col gap-1 text-sm">
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Foundations</span><span class="text-black/40">12</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Architecture</span><span class="text-black/40">9</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Prompting</span><span class="text-black/40">15</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Retrieval</span><span class="text-black/40">6</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Fine-tuning</span><span class="text-black/40">8</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 border-b border-black/5 hover:pl-2 transition-all"><span>Evaluation</span><span class="text-black/40">5</span></a></li>
+          <li><a href="#" class="flex items-center justify-between py-2 hover:pl-2 transition-all"><span>Alignment</span><span class="text-black/40">7</span></a></li>
+        </ul>
+
+        <p class="text-xs uppercase tracking-[0.2em] text-black/40 mt-16 mb-6">Reading Level</p>
+        <div class="flex flex-col gap-3 text-sm">
+          <label class="flex items-center gap-3"><span class="w-4 h-4 rounded-full border border-black inline-block"></span>Beginner</label>
+          <label class="flex items-center gap-3"><span class="w-4 h-4 rounded-full border border-black inline-block"></span>Intermediate</label>
+          <label class="flex items-center gap-3"><span class="w-4 h-4 rounded-full border border-black inline-block"></span>Advanced</label>
+        </div>
+      </aside>
+
+      <main id="main-content" class="py-16 md:py-24">
+
+        <!-- ============ HERO ============ -->
+        <section class="max-w-2xl mb-24 md:mb-32">
+          <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-6">A quiet library of machine-written notes</p>
+          <h1 class="font-serif-display text-4xl sm:text-5xl md:text-6xl leading-[1.1] tracking-tight mb-8">
+            Understand how language models actually work.
+          </h1>
+          <p class="text-base md:text-lg text-black/70 leading-relaxed mb-8">
+            Codex is a small reading room for explainers on large language models — transformers,
+            attention, retrieval, fine-tuning, and the ideas that hold them together. Every piece is
+            drafted by an AI, edited for clarity, and laid out for slow, attentive reading.
+          </p>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="#featured" class="inline-flex items-center rounded-full bg-black text-white px-8 py-3 text-sm hover:opacity-80 transition-opacity">
+              Start reading
+            </a>
+            <a href="#library" class="inline-flex items-center rounded-full border border-black px-8 py-3 text-sm hover:bg-black hover:text-white transition-colors">
+              Browse the library
+            </a>
+          </div>
+        </section>
+
+        <!-- ============ LIBRARY GRID ============ -->
+        <section id="library" class="mb-24 md:mb-32">
+          <div class="flex items-end justify-between mb-8 md:mb-12">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-2">The Library</p>
+              <h2 class="font-serif-display text-2xl md:text-3xl">Recent explainers</h2>
+            </div>
+            <a href="#" class="hidden sm:inline text-sm underline underline-offset-4 hover:opacity-60">View all &rarr;</a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+
+            <!-- Card 1 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-[linear-gradient(135deg,#000_0%,#3a3a3a_45%,#fff_100%)] relative overflow-hidden">
+                <div class="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_14px,rgba(255,255,255,0.12)_14px,rgba(255,255,255,0.12)_16px)]"></div>
+              </div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Beginner</span>
+                <span class="text-xs text-black/40">7 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">How Transformers Work</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                A ground-up look at the architecture behind nearly every modern language model,
+                from tokens to self-attention to stacked layers.
+              </p>
+              <a href="#featured" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-[radial-gradient(circle_at_30%_30%,#fff,#000_70%)]"></div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Advanced</span>
+                <span class="text-xs text-black/40">11 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">Understanding Attention Mechanisms</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                Why attention lets models weigh context dynamically, and how query, key, and value
+                vectors turn that idea into arithmetic.
+              </p>
+              <a href="#" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-white border border-black/10 relative overflow-hidden">
+                <div class="absolute inset-0 bg-[repeating-radial-gradient(circle_at_center,#000_0,#000_1px,transparent_1px,transparent_8px)] opacity-20"></div>
+              </div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Beginner</span>
+                <span class="text-xs text-black/40">5 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">Prompt Engineering Basics</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                Practical patterns for writing prompts that reliably get a model to do what you
+                actually mean — structure, examples, and constraints.
+              </p>
+              <a href="#" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+            <!-- Card 4 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-[linear-gradient(90deg,#000,#fff,#000)] bg-[length:200%_100%]"></div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Intermediate</span>
+                <span class="text-xs text-black/40">9 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">RAG, Explained</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                Retrieval-augmented generation gives a model a library card instead of asking it to
+                memorize everything. Here's how the pipeline fits together.
+              </p>
+              <a href="#" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+            <!-- Card 5 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-black relative overflow-hidden">
+                <div class="absolute -inset-4 border-2 border-white/20 rounded-full"></div>
+                <div class="absolute inset-8 border-2 border-white/30 rounded-full"></div>
+              </div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Advanced</span>
+                <span class="text-xs text-black/40">13 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">Fine-tuning vs Prompting</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                When adjusting weights is worth the cost, and when a well-designed prompt or a
+                lightweight adapter gets you there faster.
+              </p>
+              <a href="#" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+            <!-- Card 6 -->
+            <article class="group border border-black/10 rounded-2xl p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow">
+              <div class="w-full h-32 rounded-xl mb-6 bg-[conic-gradient(from_180deg,#000,#fff,#000)]"></div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Intermediate</span>
+                <span class="text-xs text-black/40">8 min read</span>
+              </div>
+              <h3 class="font-serif-display text-xl mb-3 leading-snug">Tokens, Context, and Cost</h3>
+              <p class="text-sm text-black/60 leading-relaxed mb-6">
+                What a token actually is, why context windows have limits, and how both quietly
+                shape what a model can and can't do.
+              </p>
+              <a href="#" class="mt-auto text-sm underline underline-offset-4 group-hover:opacity-60">Read the piece &rarr;</a>
+            </article>
+
+          </div>
+        </section>
+
+        <!-- ============ FEATURED / DETAIL VIEW ============ -->
+        <section id="featured" class="border-t border-black/10 pt-16 md:pt-24">
+          <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-6">Featured Reading</p>
+
+          <div class="max-w-2xl">
+            <div class="flex items-center gap-3 mb-6">
+              <span class="text-xs uppercase tracking-wide rounded-full border border-black px-3 py-1">Advanced</span>
+              <span class="text-xs text-black/40">11 min read</span>
+              <span class="text-xs text-black/40">&middot;</span>
+              <span class="text-xs text-black/40">Architecture</span>
+            </div>
+
+            <h2 class="font-serif-display text-3xl sm:text-4xl md:text-5xl leading-[1.15] tracking-tight mb-8">
+              Understanding Attention Mechanisms
+            </h2>
+
+            <p class="text-black/50 text-sm mb-16">Written by Codex &middot; drafted with an LLM, lightly edited</p>
+
+            <div class="flex flex-col gap-6 text-[17px] leading-[1.8] text-black/80">
+              <p>
+                Every transformer model rests on one simple move: instead of reading a sentence
+                strictly left to right, it looks at every word at once and asks, for each one,
+                which other words in the sequence actually matter to it right now. That question,
+                repeated across layers and positions, is what we call attention. It sounds almost
+                too simple to explain why these models write coherent paragraphs, hold a train of
+                thought across pages, or translate a sentence while preserving its tone — but the
+                mechanism scales in ways that earlier architectures never could.
+              </p>
+              <p>
+                Mechanically, attention works by turning every token into three vectors: a query,
+                a key, and a value. The query represents what a given token is "looking for," the
+                key represents what each token "offers," and the value is the information actually
+                passed along once a match is found. A token's query is compared against every
+                other token's key using a dot product, producing a raw score for how relevant that
+                pair is. Those scores are scaled, passed through a softmax function so they sum to
+                one, and then used as weights to blend the value vectors together. The result is a
+                new representation of the token that has absorbed context from everywhere it
+                needed to.
+              </p>
+              <h3 class="font-serif-display text-2xl mt-4 mb-2 text-black">Why "self" attention matters</h3>
+              <p>
+                In a self-attention layer, the queries, keys, and values all come from the same
+                sequence — the sentence is, in effect, attending to itself. This is what allows a
+                model to resolve a pronoun by looking back at the noun it refers to, or to
+                recognize that "bank" means something different next to "river" than it does next
+                to "loan." Stack enough of these layers together, each one refining the
+                representation a little further, and the model builds up something close to an
+                understanding of structure — not because it was told the rules of grammar, but
+                because attending to context repeatedly makes certain patterns statistically
+                unavoidable to learn.
+              </p>
+              <p>
+                Multi-head attention pushes this further by running several of these query-key-value
+                computations in parallel, each with its own learned projections. One head might
+                specialize in tracking subject-verb agreement, another in resolving coreference,
+                another in something with no clean human name at all. Their outputs are
+                concatenated and projected back down, giving the model a richer, higher-dimensional
+                view of the same sentence than any single attention pattern could provide alone.
+              </p>
+              <h3 class="font-serif-display text-2xl mt-4 mb-2 text-black">The cost of looking everywhere</h3>
+              <p>
+                The tradeoff is cost: comparing every token to every other token means the
+                computation grows quadratically with sequence length. Doubling the context window
+                roughly quadruples the attention workload, which is precisely why long-context
+                models have needed clever approximations — sparse attention, sliding windows, and
+                various forms of caching — to stay usable. Understanding this tradeoff is often the
+                first step toward understanding why context length, latency, and cost are so
+                tightly coupled in practice.
+              </p>
+              <p>
+                None of this requires the model to "understand" language in a human sense. It only
+                requires that attending to the right context, over and over, across billions of
+                examples, produces representations useful enough to predict the next token
+                convincingly. That attention turns out to be enough to write essays, hold
+                conversations, and explain itself back to you is, arguably, the most surprising
+                empirical result in the whole field.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-4 mt-16 pt-8 border-t border-black/10">
+              <span class="w-10 h-10 rounded-full bg-black shrink-0"></span>
+              <div>
+                <p class="text-sm">Drafted by an LLM, reviewed by Codex editors</p>
+                <p class="text-xs text-black/40">Last updated August 2026</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-black/10 mt-16">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div class="lg:col-span-2">
+          <div class="flex items-center gap-4 mb-6">
+            <span class="relative w-8 h-8 rounded-full border-2 border-black flex items-center justify-center">
+              <span class="absolute inset-0 m-auto w-2 h-2 rounded-full bg-black"></span>
+            </span>
+            <span class="font-serif-display text-xl">Codex</span>
+          </div>
+          <p class="text-sm text-black/60 max-w-sm leading-relaxed">
+            A quiet reading room for AI-written explainers on how language models work. Built for
+            slow reading, not scrolling.
+          </p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-6">Explore</p>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a href="#library" class="hover:opacity-60">Library</a></li>
+            <li><a href="#featured" class="hover:opacity-60">Featured</a></li>
+            <li><a href="#" class="hover:opacity-60">Topics</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-black/40 mb-6">About</p>
+          <ul class="flex flex-col gap-3 text-sm">
+            <li><a href="#" class="hover:opacity-60">Our approach</a></li>
+            <li><a href="#" class="hover:opacity-60">Editorial process</a></li>
+            <li><a href="#" class="hover:opacity-60">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-black/10 text-xs text-black/40">
+        <p>&copy; 2026 Codex. All essays generated with AI assistance.</p>
+        <p>Set in Source Serif 4 &amp; Inter</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      const isHidden = mobileMenu.classList.contains('hidden');
+      mobileMenu.classList.toggle('hidden');
+      menuBtn.setAttribute('aria-expanded', String(isHidden));
+    });
+  </script>
+</body>
+</html>

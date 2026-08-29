@@ -1,0 +1,3 @@
+# The Transformer
+
+Welcome, class, to one of the most important architectural breakthroughs in modern AI — the Transformer. If you want to build your own LLM, this is the foundation you must understand deeply. The Transformer replaced recurrent architectures with a mechanism called self-attention, allowing models to process entire sequences in parallel while still capturing long-range dependencies. In this topic, we'll dissect every component of the Transformer, from the attention mechanism to the feed-forward layers, residual connections, and layer normalization. By the end, you'll understand not just how Transformers work, but why they work so remarkably well — and you'll be ready to implement one from scratch.

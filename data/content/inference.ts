@@ -1,0 +1,49 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "llm-inference": {
+    whatIs: "LLM inference is the process of running a trained model to generate text from a prompt, comprising a prefill phase (processing the prompt) and a decode phase (generating tokens autoregressively).",
+    whereUsed: "Every chatbot API call (OpenAI, Anthropic, vLLM-served Llama) performs inference; inference is compute- and memory-bound, dominated by attention and matmul operations.",
+    howToBuild: "Load a model with `AutoModelForCausalLM.from_pretrained`, call `model.generate(input_ids, max_new_tokens=100)`, and decode with `tokenizer.decode(output[0])` to see generated text.",
+  },
+  "prefill": {
+    whatIs: "Prefill is the first inference phase where the model processes the entire prompt in parallel, computing KV caches for all prompt tokens; it is compute-bound and dominates time-to-first-token.",
+    whereUsed: "vLLM, TensorRT-LLM, and HF `generate()` all run prefill before decode; long-context models like Gemini 1.5 spend most of TTFT on prefill of the large prompt.",
+    howToBuild: "Time the first token by wrapping `model(input_ids)` (prefill only) with `torch.cuda.Event` timers; compare TTFT for prompt lengths 128, 512, and 4096 to see prefill scaling.",
+  },
+  "decode": {
+    whatIs: "Decode is the autoregressive phase where the model generates one token at a time using the KV cache, feeding each new token back as input; it is memory-bandwidth-bound and dominates total generation time.",
+    whereUsed: "All autoregressive LLMs (GPT, Llama, Mistral) decode token-by-token; vLLM continuous batching and speculative decoding target decode-phase bottlenecks.",
+    howToBuild: "After prefill, loop `next_token = model(past_kv, last_token).logits.argmax(-1)`, append to sequence, and measure per-token latency with `time.time()` to observe decode speed.",
+  },
+  "token-generation": {
+    whatIs: "Token generation is the autoregressive emission of tokens one at a time, where each new token is sampled (greedy, top-p, top-k) from the model's output distribution conditioned on all prior tokens.",
+    whereUsed: "OpenAI `temperature`, `top_p`, and `max_tokens` parameters control generation; HF `generate(do_sample=True, top_k=50, top_p=0.9)` implements the same sampling strategies.",
+    howToBuild: "Use `model.generate(input_ids, do_sample=True, temperature=0.7, top_p=0.9, max_new_tokens=100)` and inspect `generation_config` to see the sampling parameters in effect.",
+  },
+  "inference-latency": {
+    whatIs: "Inference latency is the time taken to produce a response, split into time-to-first-token (TTFT, prefill-bound) and inter-token latency (decode-bound), both critical for user experience.",
+    whereUsed: "vLLM, TensorRT-LLM, and SGLang are optimised for latency; OpenAI and Anthropic report TTFT and tokens/sec metrics; production SLAs target <500ms TTFT and >50 tokens/sec.",
+    howToBuild: "Use `time.time()` around `model.generate(...)`, measure TTFT by timing the first-streaming-chunk event and total time / tokens for inter-token latency; log these per request.",
+  },
+  "throughput": {
+    whatIs: "Inference throughput is the number of output tokens (or requests) served per second by the inference system, a function of batch size, model size, and hardware utilisation.",
+    whereUsed: "vLLM continuous batching and TensorRT-LLM achieve high throughput on H100s; production serving targets maximise throughput while meeting per-request latency SLAs.",
+    howToBuild: "Run `benchmark_throughput.py` from vLLM with `--model llama-3-8b --batch-size 32 --input-len 512 --output-len 128` and read the reported `tokens/s` metric.",
+  },
+  "batch-inference": {
+    whatIs: "Batch inference processes multiple prompts together in a single forward pass, improving GPU utilisation and throughput by parallelising the matmuls across the batch dimension.",
+    whereUsed: "Offline eval pipelines and vLLM/TensorRT-LLM serving use dynamic batching; HF `generate()` accepts padded batches via `tokenizer(prompts, padding=True, return_tensors=\"pt\")`.",
+    howToBuild: "Tokenise a list of prompts with padding, run `model.generate(input_ids, attention_mask=attention_mask)` once for the batch, and compare wall time vs looping one-by-one.",
+  },
+  "continuous-batching": {
+    whatIs: "Continuous batching (in-flight batching) dynamically inserts and evicts requests from a running batch at every decode step, keeping the GPU saturated even as requests finish at different times.",
+    whereUsed: "vLLM's `ContinuousBatchingExecutor`, TGI, and SGLang use continuous batching to achieve 10-20x higher throughput than static batching for variable-length chat workloads.",
+    howToBuild: "Serve Llama-3-8B with `python -m vllm.entrypoints.openai.api_server --model meta-llama/Meta-Llama-3-8B-Instruct --max-num-batched-tokens 4096` and load-test with `locust` to observe throughput scaling.",
+  },
+  "streaming": {
+    whatIs: "Streaming inference returns tokens to the client incrementally as they are generated (via SSE or WebSocket), improving perceived latency by showing text progressively rather than waiting for full completion.",
+    whereUsed: "ChatGPT, Claude, and vLLM's OpenAI-compatible server support `stream=True`; HF `TextIteratorStreamer` enables streaming in custom serving scripts.",
+    howToBuild: "Use `transformers.TextIteratorStreamer(tokenizer)` with `Thread` and `model.generate(streamer=streamer, ...)`, then `for text in streamer: print(text, end=\"\")` to stream tokens.",
+  },
+};

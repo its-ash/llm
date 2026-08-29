@@ -1,0 +1,34 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "token-position": {
+    whatIs: "Token position is the index of a token within a sequence. Because self-attention is permutation-invariant by default, transformers need explicit position information to know token order.",
+    whereUsed: "Without positional information, GPT would treat 'dog bites man' and 'man bites dog' identically — every transformer injects position via encodings or embeddings before attention.",
+    howToBuild: "Run a small transformer with and without positional encodings on a word-order-sensitive task and observe that without positions, the model cannot distinguish reversed sequences.",
+  },
+  "positional-encoding": {
+    whatIs: "A positional encoding is a vector added to each token embedding that encodes its position in the sequence, allowing the transformer to use order information. Methods include sinusoidal, learned, and RoPE.",
+    whereUsed: "The original Transformer and GPT-2 use sinusoidal or learned encodings; Llama and Mistral use RoPE; the choice affects context length generalization and extrapolation.",
+    howToBuild: "Implement `pos_emb = sinusoidal(seq_len, d_model)` and add it to token embeddings `x = x + pos_emb`, then verify that attention scores differ between same-tokens at different positions.",
+  },
+  "sinusoidal-encoding": {
+    whatIs: "Sinusoidal positional encoding uses sine and cosine functions of different frequencies across dimensions to produce a unique position vector for each index, enabling relative positions to be linear functions of each other.",
+    whereUsed: "The original 'Attention Is All You Need' Transformer uses sinusoidal encodings; they allow extrapolation to longer sequences than seen in training, which learned embeddings struggle with.",
+    howToBuild: "Implement the formula `PE[pos, 2i] = sin(pos / 10000^(2i/d))` and `PE[pos, 2i+1] = cos(...)` in PyTorch, plot the heatmap with matplotlib, and add it to an embedding tensor.",
+  },
+  "learned-positional-embeddings": {
+    whatIs: "Learned positional embeddings treat each position as a trainable embedding vector, like token embeddings, allowing the model to discover optimal position representations from data rather than a fixed formula.",
+    whereUsed: "GPT-2, BERT, and ViT use learned positional embeddings; they perform well within the trained context length but do not extrapolate to longer sequences without interpolation tricks.",
+    howToBuild: "Use `nn.Embedding(max_seq_len, d_model)`, add `pos_emb(torch.arange(seq_len))` to token embeddings, and observe that positions beyond `max_seq_len` fail at inference.",
+  },
+  "relative-position": {
+    whatIs: "Relative position encoding represents the distance between tokens rather than their absolute indices, so attention depends on how far apart two tokens are, not where they sit in the sequence.",
+    whereUsed: "T5 uses relative bias, and RoPE is a multiplicative form of relative encoding; relative methods generalize better to long sequences than absolute encodings.",
+    howToBuild: "Implement a relative position bias `bias[i,j] = f(j-i)` added to attention scores, train a small transformer, and test on sequences longer than training length to see extrapolation.",
+  },
+  "rope": {
+    whatIs: "Rotary Position Embedding (RoPE) encodes position by rotating the query and key vectors by an angle proportional to their position, so the dot product naturally depends on relative position. It is the dominant modern method.",
+    whereUsed: "RoPE is used by Llama 2, Llama 3, Mistral, Qwen, and PaLM; its extrapolation properties enable context extension via techniques like NTK-aware scaling and YaRN.",
+    howToBuild: "Implement RoPE by applying `rotate_half` with `torch.cos` and `torch.sin` of position-scaled angles to Q and K, then verify that attention scores shift correctly when sequences are offset.",
+  },
+};

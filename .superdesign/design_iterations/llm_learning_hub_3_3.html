@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Learning Hub · IDE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
+<style>
+  html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  ::-webkit-scrollbar { height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 8px; }
+  .dark ::-webkit-scrollbar-thumb { background: #3f3f3f; }
+  .rail-icon { width: 20px; height: 20px; }
+
+  .grid-bg {
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 24px);
+  }
+  .dark .grid-bg {
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 24px);
+  }
+
+  #articleContent { --fs-h1: 2rem; --fs-h2: 1.25rem; --fs-body: 1rem; --fs-code: 0.9375rem; --fs-small: 0.75rem; --fs-lead: 1.0625rem; }
+  #articleContent[data-size="sm"] { --fs-h1: 1.75rem; --fs-h2: 1.0625rem; --fs-body: 0.875rem; --fs-code: 0.8125rem; --fs-small: 0.6875rem; --fs-lead: 0.9375rem; }
+  #articleContent[data-size="base"] { --fs-h1: 2rem; --fs-h2: 1.25rem; --fs-body: 1rem; --fs-code: 0.9375rem; --fs-small: 0.75rem; --fs-lead: 1.0625rem; }
+  #articleContent[data-size="lg"] { --fs-h1: 2.25rem; --fs-h2: 1.375rem; --fs-body: 1.125rem; --fs-code: 1.0625rem; --fs-small: 0.8125rem; --fs-lead: 1.1875rem; }
+  #articleContent[data-size="xl"] { --fs-h1: 2.5rem; --fs-h2: 1.5rem; --fs-body: 1.25rem; --fs-code: 1.1875rem; --fs-small: 0.875rem; --fs-lead: 1.3125rem; }
+
+  .art-h1 { font-size: clamp(1.75rem, 4vw, var(--fs-h1)); }
+  .art-h2 { font-size: var(--fs-h2); }
+  .art-body { font-size: var(--fs-body); }
+  .art-lead { font-size: var(--fs-lead); }
+  .art-code { font-size: var(--fs-code); }
+  .art-small { font-size: var(--fs-small); }
+</style>
+</head>
+<body class="bg-white text-black dark:bg-neutral-950 dark:text-white">
+
+<div class="flex h-screen w-full overflow-hidden">
+
+  <!-- MOBILE DRAWER OVERLAY -->
+  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden"></div>
+
+  <!-- ICON RAIL + FILE LIST (drawer on mobile) -->
+  <div id="sideDrawer" class="fixed lg:static inset-y-0 left-0 z-50 flex -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out bg-white dark:bg-neutral-950">
+
+    <!-- Icon rail -->
+    <div class="w-16 shrink-0 bg-white dark:bg-neutral-950 border-r border-black/10 dark:border-white/10 flex flex-col items-center py-6 gap-8">
+      <div class="w-10 h-10 rounded-lg bg-black dark:bg-white text-white dark:text-black flex items-center justify-center mb-2">
+        <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      </div>
+
+      <button class="flex flex-col items-center gap-2 group">
+        <span class="w-10 h-10 rounded-lg bg-black dark:bg-white text-white dark:text-black flex items-center justify-center">
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </span>
+        <span class="text-[10px] font-bold mono">Library</span>
+      </button>
+
+      <button class="flex flex-col items-center gap-2 group">
+        <span class="w-10 h-10 rounded-lg border border-black/15 dark:border-white/20 text-black dark:text-white flex items-center justify-center group-hover:bg-black/5 dark:group-hover:bg-white/10">
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4h12v16l-6-4-6 4V4z"/></svg>
+        </span>
+        <span class="text-[10px] font-bold mono">Marks</span>
+      </button>
+
+      <button class="flex flex-col items-center gap-2 group">
+        <span class="w-10 h-10 rounded-lg border border-black/15 dark:border-white/20 text-black dark:text-white flex items-center justify-center group-hover:bg-black/5 dark:group-hover:bg-white/10">
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>
+        </span>
+        <span class="text-[10px] font-bold mono">Progress</span>
+      </button>
+
+      <button class="flex flex-col items-center gap-2 group mt-auto">
+        <span class="w-10 h-10 rounded-lg border border-black/15 dark:border-white/20 text-black dark:text-white flex items-center justify-center group-hover:bg-black/5 dark:group-hover:bg-white/10">
+          <svg class="rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+        </span>
+        <span class="text-[10px] font-bold mono">Settings</span>
+      </button>
+    </div>
+
+    <!-- File list panel -->
+    <div class="w-72 shrink-0 bg-white dark:bg-neutral-950 border-r border-black/10 dark:border-white/10 flex flex-col">
+      <div class="p-6 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest opacity-70">Generated Files</p>
+          <p class="text-xs font-bold mt-1 mono">llm-course/attention-unit</p>
+        </div>
+        <button id="closeDrawer" class="lg:hidden w-8 h-8 rounded-md border border-black/15 dark:border-white/20 flex items-center justify-center">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+
+        <p class="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest opacity-70">Core Topics</p>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 bg-black text-white dark:bg-white dark:text-black">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded bg-white text-black dark:bg-black dark:text-white flex items-center justify-center shrink-0">MD</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">attention-mechanisms.md</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">Active · 68% read</span>
+          </span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-black/5 dark:hover:bg-white/10">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded border border-black/20 dark:border-white/25 flex items-center justify-center shrink-0">MD</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">tokenization.md</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">Read · 100%</span>
+          </span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-black/5 dark:hover:bg-white/10">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded border border-black/20 dark:border-white/25 flex items-center justify-center shrink-0">MD</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">fine-tuning.md</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">In progress · 22%</span>
+          </span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-black/5 dark:hover:bg-white/10">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded border border-black/20 dark:border-white/25 flex items-center justify-center shrink-0">MD</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">embeddings-basics.md</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">Not started</span>
+          </span>
+        </a>
+
+        <p class="px-2 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest opacity-70">Notes & Extras</p>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-black/5 dark:hover:bg-white/10">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded border border-black/20 dark:border-white/25 flex items-center justify-center shrink-0">TXT</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">notes.md</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">Draft</span>
+          </span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-black/5 dark:hover:bg-white/10">
+          <span class="mono text-[9px] font-bold w-8 h-6 rounded border border-black/20 dark:border-white/25 flex items-center justify-center shrink-0">JSON</span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-bold truncate">glossary.json</span>
+            <span class="block text-[10px] font-bold opacity-70 mono">Reference</span>
+          </span>
+        </a>
+
+      </div>
+
+      <div class="p-4 border-t border-black/10 dark:border-white/10">
+        <div class="rounded-lg border border-black/10 dark:border-white/15 p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold">Course progress</p>
+            <p class="text-[10px] font-bold mono opacity-70">46%</p>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-black/10 dark:bg-white/15 mt-3 overflow-hidden">
+            <div class="h-full w-[46%] bg-black dark:bg-white rounded-full"></div>
+          </div>
+          <p class="text-[10px] font-bold mt-2 mono opacity-70">3 / 6 files completed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN COLUMN -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top bar (mobile hamburger + title + toolbar cluster) -->
+    <div class="flex items-center gap-3 px-4 lg:px-8 py-4 border-b border-black/10 dark:border-white/10 shrink-0">
+      <button id="openDrawer" class="lg:hidden w-9 h-9 rounded-md border border-black/15 dark:border-white/20 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="min-w-0">
+        <p class="text-sm font-bold truncate">LLM Learning Hub</p>
+        <p class="text-[10px] font-bold opacity-70 truncate mono">workspace/llm-course/attention-unit</p>
+      </div>
+
+      <div class="ml-auto flex items-center gap-2 shrink-0">
+
+        <!-- Toolbar cluster: font stepper + dark toggle + Ask AI -->
+        <div class="flex items-stretch border border-black/15 dark:border-white/20 rounded-md overflow-hidden divide-x divide-black/15 dark:divide-white/20">
+          <div class="flex items-center">
+            <button id="fontDec" aria-label="Decrease font size" class="w-8 h-8 flex items-center justify-center text-xs font-black hover:bg-black/5 dark:hover:bg-white/10">A-</button>
+            <span id="fontLabel" class="hidden sm:inline-block mono text-[9px] font-bold px-1 w-9 text-center select-none opacity-70">BASE</span>
+            <button id="fontInc" aria-label="Increase font size" class="w-8 h-8 flex items-center justify-center text-sm font-black hover:bg-black/5 dark:hover:bg-white/10">A+</button>
+          </div>
+          <button id="themeToggle" aria-label="Toggle dark mode" class="w-9 h-8 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10">
+            <svg id="iconSun" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+            <svg id="iconMoon" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+          </button>
+          <button id="askAiBtn" class="flex items-center gap-1.5 px-2.5 sm:px-3 h-8 text-[11px] font-black hover:bg-black/5 dark:hover:bg-white/10">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            <span class="hidden sm:inline">Ask AI</span>
+          </button>
+        </div>
+
+        <button class="lg:hidden shrink-0 rounded-md border border-black/15 dark:border-white/20 px-3 h-9 text-[10px] font-bold mono" id="mapToggle">
+          MAP
+        </button>
+        <button class="hidden lg:flex shrink-0 rounded-md bg-black text-white dark:bg-white dark:text-black px-4 h-9 text-xs font-bold items-center gap-2">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          New note
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="flex items-stretch border-b border-black/10 dark:border-white/10 overflow-x-auto shrink-0 bg-white dark:bg-neutral-950">
+      <div class="flex items-center gap-2 px-4 py-3 border-r border-black/10 dark:border-white/10 shrink-0">
+        <span class="mono text-[9px] font-bold px-1.5 py-0.5 rounded border border-black/20 dark:border-white/25 opacity-70">MD</span>
+        <span class="mono text-xs font-bold whitespace-nowrap">tokenization.md</span>
+        <button class="w-4 h-4 rounded-sm flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/15 shrink-0">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-3 border-r border-black/10 dark:border-white/10 shrink-0 bg-black text-white dark:bg-white dark:text-black relative">
+        <span class="mono text-[9px] font-bold px-1.5 py-0.5 rounded border border-white/30 dark:border-black/30 opacity-80">MD</span>
+        <span class="mono text-xs font-bold whitespace-nowrap">attention-mechanisms.md</span>
+        <button class="w-4 h-4 rounded-sm flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/15 shrink-0">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <span class="absolute left-0 right-0 -bottom-px h-[2px] bg-black dark:bg-white"></span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-3 border-r border-black/10 dark:border-white/10 shrink-0">
+        <span class="mono text-[9px] font-bold px-1.5 py-0.5 rounded border border-black/20 dark:border-white/25 opacity-70">MD</span>
+        <span class="mono text-xs font-bold whitespace-nowrap">fine-tuning.md</span>
+        <button class="w-4 h-4 rounded-sm flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/15 shrink-0">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-3 border-r border-black/10 dark:border-white/10 shrink-0">
+        <span class="mono text-[9px] font-bold px-1.5 py-0.5 rounded border border-black/20 dark:border-white/25 opacity-70">MD</span>
+        <span class="mono text-xs font-bold whitespace-nowrap">embeddings-basics.md</span>
+        <button class="w-4 h-4 rounded-sm flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/15 shrink-0">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- READING PROGRESS BAR -->
+    <div class="h-1 w-full bg-black/10 dark:bg-white/15 shrink-0">
+      <div id="progressBar" class="h-full w-[68%] bg-black dark:bg-white"></div>
+    </div>
+
+    <!-- CONTENT + CONCEPT MAP -->
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- Article content -->
+      <div class="flex-1 overflow-y-auto grid-bg">
+        <div id="articleContent" data-size="base" class="max-w-3xl mx-auto px-6 lg:px-10 py-10 lg:py-12">
+
+          <div class="flex items-center gap-2 mb-4">
+            <span class="mono text-[10px] font-bold px-2 py-1 rounded bg-black text-white dark:bg-white dark:text-black">MD</span>
+            <span class="art-small font-bold opacity-70 mono">Generated · 12 min read · Section 3 of 6</span>
+          </div>
+
+          <h1 class="art-h1 font-black leading-tight">Attention Mechanisms</h1>
+          <p class="mt-4 art-lead font-bold leading-relaxed">
+            Attention lets a model decide, for every output token, which parts of the input sequence deserve focus. Instead of compressing an entire sequence into one fixed vector, attention keeps every position accessible and lets the model weigh them dynamically.
+          </p>
+
+          <div class="mt-8 rounded-xl border border-black/15 dark:border-white/20 bg-black/[0.03] dark:bg-white/[0.05] p-6 flex gap-4">
+            <div class="w-9 h-9 rounded-lg bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            </div>
+            <div>
+              <p class="art-body font-black">Prerequisite check</p>
+              <p class="art-body font-bold mt-1 leading-relaxed">This file assumes you've read <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">tokenization.md</span> and understand how raw text becomes token IDs before being embedded.</p>
+            </div>
+          </div>
+
+          <h2 class="art-h2 font-black mt-10">1. From embeddings to attention scores</h2>
+          <p class="mt-3 art-body font-bold leading-relaxed">
+            Each token embedding is projected into three vectors: a query <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">Q</span>, a key <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">K</span>, and a value <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">V</span>. The similarity between a query and every key produces a raw attention score.
+          </p>
+
+          <div class="mt-6 rounded-lg border border-black/15 dark:border-white/20 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2 border-b border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.05]">
+              <span class="mono art-small font-bold opacity-60">score.py</span>
+              <span class="mono art-small font-bold opacity-60">L1</span>
+            </div>
+            <div class="flex px-4 py-4 overflow-x-auto">
+              <span class="mono art-small opacity-40 pr-4 select-none">1</span>
+              <span class="mono art-code font-bold whitespace-nowrap">score(Q, K) = (Q &middot; K<sup>T</sup>) / sqrt(d_k)</span>
+            </div>
+          </div>
+
+          <p class="mt-6 art-body font-bold leading-relaxed">
+            Dividing by <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">sqrt(d_k)</span> keeps the dot products from growing too large as dimensionality increases, which stabilizes gradients once the scores pass through <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">softmax()</span>.
+          </p>
+
+          <h2 class="art-h2 font-black mt-10">2. Softmax and weighted sums</h2>
+          <p class="mt-3 art-body font-bold leading-relaxed">
+            The scores are normalized with softmax so they sum to 1 across the sequence, then used to compute a weighted average of the value vectors. This weighted sum becomes the new, context-aware representation of the token.
+          </p>
+
+          <ul class="mt-4 space-y-2">
+            <li class="flex gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-2 shrink-0"></span>
+              <span class="art-body font-bold leading-relaxed">High attention weight means the token pulls strongly from that position's value vector.</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-2 shrink-0"></span>
+              <span class="art-body font-bold leading-relaxed">Near-zero weight means that position is effectively ignored for this query.</span>
+            </li>
+          </ul>
+
+          <div class="mt-8 rounded-xl border-2 border-black dark:border-white p-6">
+            <p class="art-small font-black uppercase tracking-widest mono">// Callout: why it matters</p>
+            <p class="mt-2 art-body font-bold leading-relaxed">
+              Self-attention removed the sequential bottleneck of RNNs — every token can look at every other token in a single step, which is what made large-scale parallel training of transformers practical.
+            </p>
+          </div>
+
+          <h2 class="art-h2 font-black mt-10">3. Multi-head attention</h2>
+          <p class="mt-3 art-body font-bold leading-relaxed">
+            Rather than computing attention once, the model runs several attention "heads" in parallel, each with its own learned <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">Q</span>, <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">K</span>, <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">V</span> projections. Heads are concatenated and passed through an output projection <span class="mono art-small px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15">W_o</span>.
+          </p>
+
+          <div class="mt-10 pt-8 border-t border-black/10 dark:border-white/10 flex items-center justify-between">
+            <button class="flex items-center gap-2 art-body font-black mono">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+              tokenization.md
+            </button>
+            <button class="flex items-center gap-2 art-body font-black mono">
+              fine-tuning.md
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <!-- Concept map collapses here on smaller screens -->
+          <div id="conceptMapMobile" class="mt-10 lg:hidden">
+            <details class="rounded-xl border border-black/15 dark:border-white/20 p-5">
+              <summary class="text-sm font-black cursor-pointer mono">Concept map</summary>
+              <div class="mt-6 flex flex-col items-center gap-0">
+                <div class="rounded-lg border-2 border-black dark:border-white px-4 py-3 text-sm font-black w-full text-center">Tokenization</div>
+                <div class="w-px h-6 bg-black dark:bg-white"></div>
+                <div class="rounded-lg border-2 border-black dark:border-white px-4 py-3 text-sm font-black w-full text-center">Embeddings</div>
+                <div class="w-px h-6 bg-black dark:bg-white"></div>
+                <div class="rounded-lg border-2 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black px-4 py-3 text-sm font-black w-full text-center">Attention</div>
+                <div class="w-px h-6 bg-black dark:bg-white"></div>
+                <div class="rounded-lg border-2 border-black dark:border-white px-4 py-3 text-sm font-black w-full text-center">Output</div>
+              </div>
+            </details>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CONCEPT MAP PANEL (desktop only) -->
+      <div class="hidden lg:flex w-80 shrink-0 border-l border-black/10 dark:border-white/10 flex-col">
+        <div class="p-6 border-b border-black/10 dark:border-white/10">
+          <p class="text-sm font-black mono">Concept map</p>
+          <p class="text-[10px] font-bold opacity-70 mt-1">How this file connects</p>
+        </div>
+        <div class="flex-1 p-8 flex flex-col items-center justify-center gap-0 grid-bg">
+
+          <div class="w-full rounded-lg border-2 border-black dark:border-white px-4 py-4 text-center bg-white dark:bg-neutral-950">
+            <p class="text-sm font-black">Tokenization</p>
+            <p class="text-[10px] font-bold mt-1 opacity-70 mono">text &rarr; token IDs</p>
+          </div>
+          <div class="w-px h-8 bg-black dark:bg-white"></div>
+
+          <div class="w-full rounded-lg border-2 border-black dark:border-white px-4 py-4 text-center bg-white dark:bg-neutral-950">
+            <p class="text-sm font-black">Embeddings</p>
+            <p class="text-[10px] font-bold mt-1 opacity-70 mono">IDs &rarr; vectors</p>
+          </div>
+          <div class="w-px h-8 bg-black dark:bg-white"></div>
+
+          <div class="w-full rounded-lg border-2 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black px-4 py-4 text-center">
+            <p class="text-sm font-black">Attention</p>
+            <p class="text-[10px] font-bold mt-1 opacity-80 mono">context weighting</p>
+          </div>
+          <div class="w-px h-8 bg-black dark:bg-white"></div>
+
+          <div class="w-full rounded-lg border-2 border-black dark:border-white px-4 py-4 text-center bg-white dark:bg-neutral-950">
+            <p class="text-sm font-black">Output</p>
+            <p class="text-[10px] font-bold mt-1 opacity-70 mono">next-token prediction</p>
+          </div>
+
+        </div>
+        <div class="p-6 border-t border-black/10 dark:border-white/10">
+          <div class="rounded-lg border border-black/10 dark:border-white/15 p-4">
+            <p class="text-xs font-black">Related file</p>
+            <p class="text-xs font-bold mt-1 mono">fine-tuning.md</p>
+            <p class="text-[10px] font-bold mt-1 opacity-70">Builds on attention to adapt pretrained weights.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="hidden sm:flex items-center gap-4 px-4 lg:px-8 h-7 border-t border-black/10 dark:border-white/10 bg-black text-white dark:bg-white dark:text-black shrink-0 mono text-[10px] font-bold overflow-x-auto">
+      <span>attention-mechanisms.md</span>
+      <span class="opacity-60">UTF-8</span>
+      <span class="opacity-60">LF</span>
+      <span class="opacity-60">Section 3/6</span>
+      <span class="ml-auto flex items-center gap-4 shrink-0">
+        <span>12 min read</span>
+        <span id="statusProgress">68% read</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ASK AI PANEL -->
+<div id="askAiPanel" class="hidden fixed bottom-4 right-4 z-50 w-[calc(100%-2rem)] sm:w-96 max-h-[28rem] rounded-lg border border-black/15 dark:border-white/20 bg-white dark:bg-neutral-950 shadow-2xl flex flex-col overflow-hidden">
+  <div class="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10 bg-black text-white dark:bg-white dark:text-black shrink-0">
+    <div class="flex items-center gap-2 min-w-0">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <span class="mono text-[11px] font-black truncate">Ask AI &middot; attention-mechanisms.md</span>
+    </div>
+    <button id="closeAskAi" class="w-6 h-6 rounded-md flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/15 shrink-0">
+      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-4 space-y-3">
+    <div class="flex gap-2">
+      <span class="mono text-[9px] font-bold w-6 h-6 rounded-md bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">AI</span>
+      <p class="text-xs font-bold leading-relaxed bg-black/5 dark:bg-white/10 rounded-lg px-3 py-2">Ask me anything about attention mechanisms &mdash; scaled dot-product, multi-head, or how it connects to tokenization.md.</p>
+    </div>
+  </div>
+  <div class="p-3 border-t border-black/10 dark:border-white/10 shrink-0">
+    <div class="flex items-center gap-2 border border-black/15 dark:border-white/20 rounded-md px-3 py-2">
+      <input type="text" placeholder="Ask about this file..." class="flex-1 min-w-0 bg-transparent text-xs font-bold outline-none placeholder:opacity-50" />
+      <button class="mono text-[9px] font-black px-2 py-1.5 rounded bg-black text-white dark:bg-white dark:text-black shrink-0">SEND</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const drawer = document.getElementById('sideDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const openBtn = document.getElementById('openDrawer');
+  const closeBtn = document.getElementById('closeDrawer');
+  const mapToggle = document.getElementById('mapToggle');
+  const conceptMapMobile = document.getElementById('conceptMapMobile');
+
+  function openDrawer() {
+    drawer.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+  }
+  function closeDrawer() {
+    drawer.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+  }
+
+  openBtn.addEventListener('click', openDrawer);
+  closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  mapToggle.addEventListener('click', () => {
+    const details = conceptMapMobile.querySelector('details');
+    details.open = true;
+    conceptMapMobile.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  const htmlEl = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const iconSun = document.getElementById('iconSun');
+  const iconMoon = document.getElementById('iconMoon');
+
+  function applyTheme(isDark) {
+    htmlEl.classList.toggle('dark', isDark);
+    iconSun.classList.toggle('hidden', isDark);
+    iconMoon.classList.toggle('hidden', !isDark);
+    localStorage.setItem('llmhub-theme', isDark ? 'dark' : 'light');
+  }
+
+  const savedTheme = localStorage.getItem('llmhub-theme');
+  applyTheme(savedTheme === 'dark');
+
+  themeToggle.addEventListener('click', () => {
+    applyTheme(!htmlEl.classList.contains('dark'));
+  });
+
+  const articleContent = document.getElementById('articleContent');
+  const fontDec = document.getElementById('fontDec');
+  const fontInc = document.getElementById('fontInc');
+  const fontLabel = document.getElementById('fontLabel');
+  const sizes = ['sm', 'base', 'lg', 'xl'];
+  const labels = { sm: 'SM', base: 'BASE', lg: 'LG', xl: 'XL' };
+
+  let sizeIdx = sizes.indexOf(localStorage.getItem('llmhub-fontsize'));
+  if (sizeIdx === -1) sizeIdx = sizes.indexOf('base');
+
+  function updateFont() {
+    const size = sizes[sizeIdx];
+    articleContent.dataset.size = size;
+    fontLabel.textContent = labels[size];
+    fontDec.disabled = sizeIdx === 0;
+    fontInc.disabled = sizeIdx === sizes.length - 1;
+    fontDec.classList.toggle('opacity-30', sizeIdx === 0);
+    fontInc.classList.toggle('opacity-30', sizeIdx === sizes.length - 1);
+    localStorage.setItem('llmhub-fontsize', size);
+  }
+
+  fontInc.addEventListener('click', () => {
+    if (sizeIdx < sizes.length - 1) { sizeIdx++; updateFont(); }
+  });
+  fontDec.addEventListener('click', () => {
+    if (sizeIdx > 0) { sizeIdx--; updateFont(); }
+  });
+  updateFont();
+
+  const askAiBtn = document.getElementById('askAiBtn');
+  const askAiPanel = document.getElementById('askAiPanel');
+  const closeAskAi = document.getElementById('closeAskAi');
+
+  askAiBtn.addEventListener('click', () => {
+    askAiPanel.classList.toggle('hidden');
+  });
+  closeAskAi.addEventListener('click', () => {
+    askAiPanel.classList.add('hidden');
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "eos-token": {
+    whatIs: "The EOS (end-of-sequence) token is a special vocabulary entry that signals the model has finished generating. When the model emits EOS, the generation loop stops and the final sequence is returned.",
+    whereUsed: "Every LLM uses an EOS token: `<|endoftext|>` in GPT-2, `</s>` in T5/BART, `<eos>` in LLaMA. Special tokens like `<|im_end|>` in ChatML serve as turn-ending equivalents. Tokenizers map these to fixed integer IDs.",
+    howToBuild: "Get the EOS ID from the tokenizer: `eos_id = tokenizer.eos_token_id`. In the generation loop: `if next_token.item() == eos_id: break`. Append EOS during training so the model learns to emit it.",
+  },
+  "stop-conditions": {
+    whatIs: "A stop condition is any criterion that terminates the generation loop. Common conditions include emitting the EOS token, reaching the maximum token limit, or encountering a user-specified stop sequence.",
+    whereUsed: "Production LLM APIs (OpenAI, Anthropic, HuggingFace TGI) implement multiple stop conditions simultaneously. For example, GPT-4 stops on EOS, max_tokens, or a custom stop string like '\\\\n\\\\nHuman:'. This ensures controlled, bounded output.",
+    howToBuild: "Combine checks: `if next == eos_id or len(ids) >= max_tokens or stop_str in decoded: break`. Decode incrementally and substring-match against a list of stop strings. Return output up to (but excluding) the stop sequence.",
+  },
+  "stop-sequences": {
+    whatIs: "A stop sequence is a user-defined string that, when generated, terminates output. Unlike EOS (model-learned), stop sequences are provided by the application to enforce structural boundaries, such as ending a JSON block or a chat turn.",
+    whereUsed: "OpenAI's `stop` parameter, Anthropic's `stop_sequences`, and HuggingFace TGI all support this. A coding assistant might use `stop=['\\\\n\\\\n```']` to stop after a code block. Chat templates use `stop=['<|im_end|>']` to end turns.",
+    howToBuild: "Decode the running output incrementally: `text = tokenizer.decode(ids)`. Check `if any(s in text for s in stop_sequences): break` and truncate the output before the matched sequence before returning.",
+  },
+  "maximum-tokens": {
+    whatIs: "The maximum tokens limit caps the number of tokens the model may generate in a single response. It bounds inference cost and latency, ensuring the generation loop terminates even without an EOS token.",
+    whereUsed: "Every LLM API exposes `max_tokens` (OpenAI) or `max_new_tokens` (HuggingFace). GPT-4 Turbo allows up to 4096 output tokens; Claude 3 allows 4096. Setting it too low truncates answers; too high wastes compute and time.",
+    howToBuild: "Track `generated_count` in the loop: `for i in range(max_new_tokens): ...; if i + 1 >= max_new_tokens: break`. Alternatively check `if ids.shape[1] - prompt_len >= max_new_tokens: break`.",
+  },
+  "maximum-context-length": {
+    whatIs: "The maximum context length is the total number of tokens (prompt + generated) a model can process in one forward pass. It is fixed by the model's architecture (positional embedding limit) and determines the longest conversation or document it can handle.",
+    whereUsed: "GPT-3 had 2K, GPT-4 Turbo supports 128K, Claude 3 supports 200K, and Gemini 1.5 Pro supports 2M tokens. Exceeding this limit causes errors or silent truncation. Long-context models use RoPE or ALiBi to extrapolate position embeddings.",
+    howToBuild: "Before generation, check `if len(prompt_ids) + max_new_tokens <= model_max_len: proceed else: truncate or error`. Use `tokenizer.model_max_length` to read the limit. Implement sliding-window attention or chunking for long inputs.",
+  },
+  "generation-loop": {
+    whatIs: "The generation loop is the iterative process that produces text autoregressively: forward pass, sample next token, append, check stop conditions, repeat. It is the runtime engine of every autoregressive LLM.",
+    whereUsed: "This loop runs in every LLM inference engine: HuggingFace `generate()`, vLLM, llama.cpp, and OpenAI's serving infrastructure. Optimizations like KV-caching, speculative decoding, and continuous batching all operate inside this loop.",
+    howToBuild: "Write: `ids = prompt_ids; for _ in range(max_new): logits = model(ids); next = sample(logits[:, -1]); ids = cat([ids, next]); if stop(next): break`. Enable KV-cache by passing `past_key_values` and only feeding the new token each step.",
+  },
+};

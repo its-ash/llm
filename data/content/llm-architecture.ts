@@ -1,0 +1,49 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "model-parameters": {
+    whatIs: "Model parameters are the learned weights and biases that define a model's behavior. In transformers, these include embedding matrices, attention weight matrices (Q, K, V, O), FFN weights, and LayerNorm parameters. The total count defines the model's 'size'.",
+    whereUsed: "GPT-3 has 175B parameters, LLaMA-2 70B, and GPT-4 an estimated 1.8T (MoE). Parameters are stored as float16 or bfloat16 in checkpoints (`.safetensors` or `.bin` files) and loaded into GPU VRAM for inference.",
+    howToBuild: "Count them: `sum(p.numel() for p in model.parameters())` in PyTorch. To inspect a specific layer: `for name, p in model.named_parameters(): print(name, p.shape, p.numel())`. Save with `torch.save(model.state_dict(), 'model.pt')`.",
+  },
+  "parameter-count": {
+    whatIs: "Parameter count is the total number of individual learnable values in a model. It is computed by summing the sizes of all weight matrices and vectors, and serves as the primary metric for comparing model scale.",
+    whereUsed: "Model cards report parameter counts: LLaMA-2 7B/13B/70B, Mistral 7B, GPT-3 175B. The count drives memory requirements (count x bytes per param), training compute (Chinchilla scaling laws), and inference latency.",
+    howToBuild: "Compute analytically: for a decoder-only model, parameters ≈ `12 * n_layers * d_model²` (attention + FFN) plus embeddings `2 * vocab * d_model` (if untied). In code: `sum(p.numel() for p in model.parameters())`.",
+  },
+  "weight-matrices": {
+    whatIs: "Weight matrices are the 2D tensors that perform linear transformations in a neural network. In transformers, every attention projection (Q, K, V, O) and FFN layer is a weight matrix; they are where the model's learned knowledge is stored.",
+    whereUsed: "GPT-4, LLaMA, and BERT contain thousands of weight matrices across their layers. During fine-tuning via LoRA, small low-rank matrices are added alongside frozen weight matrices to adapt the model cheaply.",
+    howToBuild: "Create with `nn.Linear(in, out)` which stores `weight` of shape `(out, in)` and optional `bias`. Initialize with `nn.init.xavier_uniform_(layer.weight)` for stable training. Access via `model.layers[0].attn.q_proj.weight`.",
+  },
+  "embedding-parameters": {
+    whatIs: "Embedding parameters map discrete token IDs to dense vectors. The token embedding matrix has shape `(vocab_size, d_model)`, and positional embeddings (learned or rotary) encode position. These are the first parameters input data touches.",
+    whereUsed: "GPT-2 uses learned positional embeddings; LLaMA and Mistral use rotary positional embeddings (RoPE) which add no parameters. The token embedding is often the largest single matrix: GPT-2's is 50257 x 768 ≈ 38M params.",
+    howToBuild: "Token: `nn.Embedding(vocab_size, d_model)`. Positional (learned): `nn.Embedding(max_seq_len, d_model)`. For RoPE, precompute rotation frequencies and apply them to Q/K vectors without learnable params. Tie LM head: `lm_head.weight = embed.weight`.",
+  },
+  "attention-parameters": {
+    whatIs: "Attention parameters are the weight matrices that project tokens into queries (Q), keys (K), values (V), and the output projection (O). Multi-head attention has one set per head, often packed into a single matrix for efficiency.",
+    whereUsed: "Every GPT, LLaMA, and BERT model has these four projections per layer per head. GQA (grouped-query attention) in LLaMA-2 and Mistral shares K/V heads to reduce parameters and KV-cache size. MQA (multi-query) shares one K/V head.",
+    howToBuild: "Standard: four `nn.Linear(d_model, d_model)` for Q, K, V, O. Multi-head: reshape output to `(B, T, n_heads, head_dim)`. For GQA: `n_kv_heads < n_heads` and broadcast K/V. Total attention params per layer: `4 * d_model * d_model` (standard).",
+  },
+  "feed-forward-parameters": {
+    whatIs: "Feed-forward parameters are the weights of the two (or three for gated) linear layers in the FFN sublayer. They typically account for ~2/3 of a transformer's total parameters because the intermediate dimension is 4x the model dimension.",
+    whereUsed: "In GPT-2 (d_model=768, d_ff=3072), the FFN has ~4.7M params per layer vs ~2.4M for attention. LLaMA's SwiGLU FFN uses three matrices (gate, up, down) with d_ff ≈ 2.67x d_model to keep param count constant relative to ReLU FFN.",
+    howToBuild: "Standard FFN: `Linear(d_model, 4*d_model)` + `Linear(4*d_model, d_model)` = `8 * d_model²` params per layer. SwiGLU: three matrices `Linear(d, d_ff)` x2 + `Linear(d_ff, d)` = `3 * d * d_ff`. Count: `sum(p.numel() for p in ffn.parameters())`.",
+  },
+  "model-depth": {
+    whatIs: "Model depth is the number of transformer layers (blocks) stacked in the model. More layers allow the model to learn more abstract, hierarchical representations but increase training time, memory, and risk of gradient degradation.",
+    whereUsed: "GPT-2 small has 12 layers, GPT-2 XL has 48, LLaMA-2 7B has 32, and LLaMA-2 70B has 80. Depth and width are co-tuned: deeper-narrower models (GPT-2 XL) vs shallower-wider ones. Scaling laws suggest depth matters less than total params.",
+    howToBuild: "Set `n_layers` as a model config hyperparameter and stack blocks: `self.blocks = nn.ModuleList([TransformerBlock(config) for _ in range(n_layers)])`. In the forward: `for block in self.blocks: x = block(x)`.",
+  },
+  "model-width": {
+    whatIs: "Model width is the hidden dimension (d_model) of the transformer, the size of the vector representing each token. Wider models can store more information per token but increase parameter count quadratically in attention and FFN layers.",
+    whereUsed: "GPT-2 small uses d_model=768, GPT-3 175B uses 12288, LLaMA-2 7B uses 4096, and LLaMA-2 70B uses 8192. Width is the primary lever for model capacity and is tied to head dimension (`d_model / n_heads`).",
+    howToBuild: "Set `d_model` in the config. It determines embedding size, attention projection size, and FFN intermediate size (`d_ff = 4 * d_model`). Choose `head_dim = d_model / n_heads` (typically 64 or 128). Embedding: `nn.Embedding(vocab, d_model)`.",
+  },
+  "number-of-heads": {
+    whatIs: "The number of attention heads splits the model dimension into multiple parallel attention computations, allowing the model to attend to different relationships simultaneously (e.g., one head tracks syntax, another tracks coreference).",
+    whereUsed: "GPT-2 small has 12 heads, LLaMA-2 7B has 32, GPT-3 175B has 96. Grouped-query attention (LLaMA-2 70B: 64 query heads, 8 KV heads) and multi-query attention (Falcon, PaLM) reduce KV-cache memory by sharing K/V heads.",
+    howToBuild: "Set `n_heads` in config, ensure `d_model % n_heads == 0`. Reshape Q/K/V: `(B, T, n_heads, d_model // n_heads) -> (B, n_heads, T, head_dim)`. For GQA: `n_kv_heads` fewer K/V projections, then `repeat_interleave` to match query heads.",
+  },
+};

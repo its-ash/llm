@@ -1,0 +1,49 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "vector-index": {
+    whatIs: "A vector index is the data structure (e.g., HNSW, IVF, PQ) used inside a vector database to organise vectors for sub-linear-time approximate nearest-neighbour search.",
+    whereUsed: "FAISS `IndexHNSWFlat` and `IndexIVFPQ`, Qdrant's HNSW, and Milvus's IVF_FLAT are common indexes; the index type trades recall, latency, and memory.",
+    howToBuild: "Build `faiss.IndexHNSWFlat(d, 32)` with `efConstruction=40`, add vectors, set `index.hnsw.efSearch=64`, call `.search(q, k)`, and compare recall against a brute-force `IndexFlatL2`.",
+  },
+  "nearest-neighbor-search": {
+    whatIs: "Nearest-neighbour search finds the k vectors in a store closest to a query vector under a distance metric; exact search compares against all vectors, costing O(n*d) per query.",
+    whereUsed: "Exact search via FAISS `IndexFlatL2` is used for small corpora and ground-truth evaluation; production systems with millions of vectors switch to approximate indexes for latency.",
+    howToBuild: "Create `faiss.IndexFlatL2(d)`, add 10k random vectors, call `.search(query, k=5)`, and time it; then compare against HNSW to see the latency improvement at a small recall cost.",
+  },
+  "approximate-nearest-neighbor": {
+    whatIs: "Approximate Nearest Neighbour (ANN) search trades a small recall loss for large speed gains by using graph-based (HNSW) or clustering-based (IVF) indexes that prune the search space.",
+    whereUsed: "HNSW is the default in Qdrant, Weaviate, and Chroma; IVF-PQ in FAISS and Milvus compresses vectors for billion-scale search; Spotify Annoy uses tree-based ANNs.",
+    howToBuild: "Use `faiss.IndexIVFPQ(quantizer, d, nlist=1024, m=8, nbits=8)`, train on a sample, add vectors, set `nprobe=16`, and measure recall@10 vs query latency compared to flat search.",
+  },
+  "cosine-similarity": {
+    whatIs: "Cosine similarity measures the cosine of the angle between two vectors, ranging from -1 to 1; it ignores magnitude and focuses on direction, making it ideal for semantic text similarity.",
+    whereUsed: "OpenAI embeddings, `BAAI/bge`, and most text embedding models are evaluated with cosine similarity; vector stores like Qdrant support `Distance.COSINE` as a first-class metric.",
+    howToBuild: "Use `F.cosine_similarity(a.unsqueeze(0), b.unsqueeze(0))` in PyTorch or `sklearn.metrics.pairwise.cosine_similarity([a],[b])`; normalise vectors and use dot-product for the same result faster.",
+  },
+  "dot-product": {
+    whatIs: "The dot product of two vectors is the sum of element-wise products; when vectors are L2-normalised it equals cosine similarity, and it is the fastest similarity metric for inner-product indexes.",
+    whereUsed: "FAISS `IndexFlatIP` and Qdrant `Distance.DOT` are used with normalised embeddings from OpenAI and BGE models to accelerate search via batched matrix multiplication.",
+    howToBuild: "Normalise embeddings with `F.normalize(vectors, dim=-1)`, build `faiss.IndexFlatIP(d)`, add vectors, and call `.search(query, k)` — results are equivalent to cosine but faster.",
+  },
+  "euclidean-distance": {
+    whatIs: "Euclidean distance (L2 distance) is the straight-line distance between two vectors in n-dimensional space, computed as the square root of the sum of squared differences.",
+    whereUsed: "FAISS `IndexFlatL2` and `sklearn.neighbors.NearestNeighbors(metric='euclidean')` use L2; some image embedding models (CLIP variants) are trained with L2-based contrastive loss.",
+    howToBuild: "Use `torch.cdist(a.unsqueeze(0), b.unsqueeze(0))` or `np.linalg.norm(a-b)`; in FAISS, `IndexFlatL2` returns squared L2 distances, so compare without sqrt for ranking.",
+  },
+  "metadata-filtering": {
+    whatIs: "Metadata filtering restricts vector search results to those whose associated metadata (e.g., source, date, author) matches a predicate, combining semantic search with structured queries.",
+    whereUsed: "Qdrant `Filter`, Weaviate `where` clauses, and pgvector `WHERE` filters are used in RAG to restrict retrieval to a user's docs or a specific date range; LangChain exposes this via `filter` kwargs.",
+    howToBuild: "In Qdrant, call `client.search(\"docs\", query_vector=vec, query_filter=Filter(must=[FieldCondition(key=\"source\", match=MatchValue(value=\"api\"))]))` to retrieve only matching chunks.",
+  },
+  "hybrid-search": {
+    whatIs: "Hybrid search combines dense vector similarity with sparse keyword search (e.g., BM25), fusing results to capture both semantic matches and exact term overlap for better retrieval.",
+    whereUsed: "Weaviate hybrid search, Qdrant sparse vectors, and LangChain `EnsembleRetriever` mix BM25 and dense retrievers; production RAG often uses reciprocal rank fusion (RRF) to merge results.",
+    howToBuild: "Use `langchain.retrievers.EnsembleRetriever(retrievers=[bm25_retriever, dense_retriever], weights=[0.5, 0.5])` and compare recall against dense-only retrieval on a query set.",
+  },
+  "reranking": {
+    whatIs: "Reranking in vector search re-scores the top retrieved candidates with a cross-encoder that jointly encodes query and document, producing a more accurate relevance ordering than bi-encoder similarity.",
+    whereUsed: "Cohere Rerank API, `BAAI/bge-reranker-v2-m3`, and `sentence-transformers` cross-encoders are applied after HNSW or IVF search in LlamaIndex and Haystack pipelines.",
+    howToBuild: "Retrieve top-50 with dense search, load `CrossEncoder('BAAI/bge-reranker-base')`, call `model.rank(query, docs, top_k=5)`, and return the top-5 re-scored documents for generation.",
+  },
+};

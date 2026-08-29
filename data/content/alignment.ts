@@ -1,0 +1,34 @@
+import type { SubtopicContent } from '~/data/content-types';
+
+export const content: Record<string, SubtopicContent> = {
+  "human-preferences": {
+    whatIs: "Human preferences are pairwise or ranked comparisons of model outputs indicating which response a human rater finds more helpful, harmless, and honest — the raw signal used to align LLMs.",
+    whereUsed: "OpenAI's InstructGPT, Anthropic's HH-RLHF, and Llama-2/3 RLHF all use human preference datasets; the `reward` and `preference` datasets on Hugging Face Hub power DPO/RLHF training.",
+    howToBuild: "Collect pairs `(prompt, chosen, rejected)` via a labelling UI like Argilla, store as a JSONL dataset, and load with `datasets.load_dataset` to feed into `DPOTrainer` or a reward model trainer.",
+  },
+  "preference-data": {
+    whatIs: "Preference data is the structured dataset of `(prompt, chosen_response, rejected_response)` triples used to train reward models or directly optimise policy models via DPO.",
+    whereUsed: "Anthropic's `hh-rlhf`, OpenAI's `summarization_from_feedback`, and Llama-3's preference data are examples; `trl.DPOTrainer` consumes this exact format for direct preference optimisation.",
+    howToBuild: "Format data as `{\"prompt\": ..., \"chosen\": ..., \"rejected\": ...}`, load into a `Dataset`, and pass to `DPOTrainer(model, ref_model, beta=0.1, train_dataset=ds)` to align without a separate reward model.",
+  },
+  "reward-model": {
+    whatIs: "A reward model is a neural network (usually a transformer with a scalar head) trained on preference data to predict a scalar score reflecting how good a response is, used to guide RLHF.",
+    whereUsed: "InstructGPT and Llama-2 train a separate RM from the base model; the RM scores samples in PPO; `trl.RewardTrainer` and `RewardConfig` train RMs on Hugging Face Hub preference datasets.",
+    howToBuild: "Replace the LM head with `nn.Linear(hidden_size, 1)` on a causal model, train on `(chosen, rejected)` pairs with a margin loss via `RewardTrainer`, and evaluate by checking `score(chosen) > score(rejected)`.",
+  },
+  "rlhf": {
+    whatIs: "Reinforcement Learning from Human Feedback (RLHF) aligns a language model by fine-tuning it with a reward model via PPO, maximising human-preferred behaviour while staying close to the reference policy.",
+    whereUsed: "Used to align GPT-3/4, Llama-2-Chat, and Claude; the `trl.PPOTrainer` implements the full RLHF loop with a policy model, reference model, reward model, and value model.",
+    howToBuild: "Use `trl.PPOConfig` + `PPOTrainer(model, ref_model, reward_model)` from the `trl` library; feed prompts, sample responses, score with the RM, and call `ppo_trainer.step(query, response, rewards)`.",
+  },
+  "ppo": {
+    whatIs: "Proximal Policy Optimisation (PPO) is a policy-gradient RL algorithm that clips the ratio of new to old policy probabilities to prevent destructive updates, used as the optimiser in RLHF.",
+    whereUsed: "PPO is the RL engine behind InstructGPT and Llama-2-Chat alignment; `trl.PPOTrainer` implements clipped PPO with a learned value function and KL penalty to the reference model.",
+    howToBuild: "Run `trl.PPOTrainer.step()` in a loop, passing query/response tensors and reward scores; the trainer internally computes clipped surrogate loss, value loss, and KL divergence against the ref model.",
+  },
+  "dpo": {
+    whatIs: "Direct Preference Optimisation (DPO) bypasses the reward model and PPO by directly optimising the policy on preference pairs using a closed-form loss derived from the RLHF objective, simplifying alignment.",
+    whereUsed: "Zephyr-7B, Llama-3 post-training, and Mistral alignment use DPO; `trl.DPOTrainer` is the standard implementation, requiring only a policy and reference model — no separate RM or RL loop.",
+    howToBuild: "Load a model and a frozen ref copy, create `DPOTrainer(model, ref_model, beta=0.1, train_dataset=preference_ds, args=DPOConfig(...))`, call `trainer.train()`, and monitor the DPO loss decreasing.",
+  },
+};

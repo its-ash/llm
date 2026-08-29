@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumen Docs — Attention Mechanisms Explained</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-black">
+
+<div class="min-h-screen flex flex-col lg:flex-row">
+
+  <!-- Mobile top bar -->
+  <div class="lg:hidden flex items-center justify-between px-4 py-4 border-b border-gray-200 sticky top-0 bg-white z-30">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center">
+        <div class="w-3 h-3 bg-white" style="clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);"></div>
+      </div>
+      <span class="font-semibold text-sm">Lumen Docs</span>
+    </div>
+    <button onclick="document.getElementById('sidebar').classList.toggle('hidden')" class="w-8 h-8 border border-gray-300 rounded-lg flex items-center justify-center">
+      <div class="flex flex-col gap-1">
+        <span class="w-4 h-[2px] bg-black block"></span>
+        <span class="w-4 h-[2px] bg-black block"></span>
+        <span class="w-4 h-[2px] bg-black block"></span>
+      </div>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="hidden lg:flex lg:flex-col w-full lg:w-[280px] lg:shrink-0 border-b lg:border-b-0 lg:border-r border-gray-200 bg-white lg:h-screen lg:sticky lg:top-0 overflow-y-auto">
+    <div class="p-8 flex flex-col gap-8">
+
+      <!-- Logo -->
+      <div class="hidden lg:flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center">
+          <div class="w-3 h-3 bg-white" style="clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);"></div>
+        </div>
+        <span class="font-semibold text-sm">Lumen Docs</span>
+      </div>
+
+      <!-- Search -->
+      <div class="relative">
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 border border-black rounded-full"></div>
+        <input type="text" placeholder="Search articles..." disabled
+          class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 border border-gray-300 rounded px-1 py-[2px]">⌘K</span>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex flex-col gap-8">
+
+        <div class="flex flex-col gap-2">
+          <p class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase px-2">Fundamentals</p>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Tokens &amp; Embeddings</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Transformer Architecture</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm font-medium bg-gray-100 border border-gray-200">Attention Mechanisms</a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <p class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase px-2">Techniques</p>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Prompt Engineering</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Retrieval-Augmented Generation</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Fine-tuning</a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <p class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase px-2">Applications</p>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Agents</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Coding Assistants</a>
+          <a href="#" class="px-2 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Evaluation</a>
+        </div>
+
+      </nav>
+
+      <!-- Stat cluster -->
+      <div class="grid grid-cols-2 gap-2 pt-8 border-t border-gray-200">
+        <div class="border border-gray-200 rounded-lg p-4">
+          <p class="text-lg font-semibold">12</p>
+          <p class="text-[11px] text-gray-500">Articles</p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-4">
+          <p class="text-lg font-semibold">4</p>
+          <p class="text-[11px] text-gray-500">Categories</p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-4 col-span-2">
+          <p class="text-lg font-semibold">Updated today</p>
+          <p class="text-[11px] text-gray-500">Last sync 09:24 AM</p>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Top bar -->
+    <div class="border-b border-gray-200 px-6 lg:px-16 py-8 flex flex-col gap-4">
+      <div class="flex items-center gap-2 text-xs text-gray-500">
+        <span>Fundamentals</span>
+        <span>/</span>
+        <span class="text-black">Attention Mechanisms</span>
+      </div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Attention Mechanisms Explained</h1>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="inline-flex items-center gap-2 border border-gray-300 rounded-full px-4 py-2 text-xs font-medium">
+            <span class="w-2 h-2 rounded-full bg-black"></span>
+            Generated by GPT-Class Model
+          </span>
+          <span class="border border-gray-300 rounded-full px-4 py-2 text-xs text-gray-500">8 min read</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col xl:flex-row">
+
+      <!-- Article -->
+      <article class="flex-1 min-w-0 px-6 lg:px-16 py-16 max-w-3xl">
+
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          Attention is the mechanism that allows a language model to decide, at every step of processing,
+          which parts of the input deserve the most focus. Instead of compressing an entire sequence into a
+          single fixed vector, attention lets the model look back across all tokens and weigh their relevance
+          dynamically. This single idea, introduced in 2017, became the foundation for nearly every modern
+          large language model.
+        </p>
+
+        <h2 id="why-attention" class="text-xl font-semibold mt-16 mb-4">Why Attention Was Needed</h2>
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          Earlier sequence models, such as recurrent neural networks, processed text one token at a time and
+          carried forward a hidden state summarizing everything seen so far. This worked reasonably well for
+          short sequences, but long documents caused the hidden state to lose information — a phenomenon
+          often called the vanishing context problem. Attention solves this by giving the model direct,
+          unmediated access to every previous token, no matter how far back it appeared.
+        </p>
+
+        <h2 id="qkv" class="text-xl font-semibold mt-16 mb-4">Queries, Keys, and Values</h2>
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          Every token is projected into three vectors: a query, a key, and a value. The query represents what
+          the current token is "looking for," the key represents what each other token "offers," and the
+          value carries the actual content to be aggregated. Attention scores are computed by comparing a
+          token's query against every other token's key, then using those scores to build a weighted sum of
+          values.
+        </p>
+
+        <div class="border border-gray-200 rounded-lg bg-gray-50 p-6 mb-8 font-mono text-sm overflow-x-auto">
+<pre>scores = (Q @ K.T) / sqrt(d_k)
+weights = softmax(scores, dim=-1)
+output  = weights @ V</pre>
+        </div>
+
+        <h2 id="multi-head" class="text-xl font-semibold mt-16 mb-4">Multi-Head Attention</h2>
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          Rather than computing a single attention pass, transformers run several attention "heads" in
+          parallel, each with its own learned projections. This lets the model attend to different types of
+          relationships simultaneously — one head might track subject-verb agreement, another might track
+          coreference across paragraphs. The outputs of all heads are concatenated and projected back to the
+          model's working dimension.
+        </p>
+
+        <ul class="list-disc pl-6 space-y-2 text-gray-600 mb-8">
+          <li>Each head learns an independent set of query, key, and value projections.</li>
+          <li>Heads are computed in parallel, keeping the operation efficient on modern hardware.</li>
+          <li>Combining heads gives the model a richer, multi-perspective representation per token.</li>
+          <li>Typical models use between 8 and 96 heads depending on scale.</li>
+        </ul>
+
+        <h2 id="self-vs-cross" class="text-xl font-semibold mt-16 mb-4">Self-Attention vs. Cross-Attention</h2>
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          In self-attention, queries, keys, and values all come from the same sequence — this is how decoder-only
+          models like most modern LLMs build context. In cross-attention, queries come from one sequence while
+          keys and values come from another, which is common in encoder-decoder architectures such as
+          translation systems, where the decoder attends over the encoder's representation of the source text.
+        </p>
+
+        <h2 id="scaling" class="text-xl font-semibold mt-16 mb-4">The Cost of Attention</h2>
+        <p class="text-base text-gray-600 leading-8 mb-8">
+          Standard attention compares every token to every other token, giving it quadratic complexity with
+          respect to sequence length. This becomes expensive as context windows grow into the hundreds of
+          thousands of tokens. Techniques such as sparse attention, sliding-window attention, and linear
+          attention approximations have been developed to reduce this cost while preserving most of the
+          quality benefits of full attention.
+        </p>
+
+        <h2 id="takeaways" class="text-xl font-semibold mt-16 mb-4">Key Takeaways</h2>
+        <p class="text-base text-gray-600 leading-8 mb-16">
+          Attention gives transformers the ability to dynamically weigh relevant context regardless of
+          distance in the sequence. Multi-head attention adds representational depth by letting the model
+          track several relationship types at once. Understanding this mechanism is the single most useful
+          step toward understanding how modern LLMs reason over long inputs.
+        </p>
+
+      </article>
+
+      <!-- On this page / related -->
+      <aside class="hidden xl:block w-[280px] shrink-0 px-8 py-16">
+        <div class="sticky top-8 flex flex-col gap-8">
+
+          <div>
+            <p class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase mb-4">On this page</p>
+            <nav class="flex flex-col gap-2 text-sm text-gray-600 border-l border-gray-200 pl-4">
+              <a href="#why-attention" class="hover:text-black">Why Attention Was Needed</a>
+              <a href="#qkv" class="hover:text-black">Queries, Keys, and Values</a>
+              <a href="#multi-head" class="font-medium text-black">Multi-Head Attention</a>
+              <a href="#self-vs-cross" class="hover:text-black">Self-Attention vs. Cross-Attention</a>
+              <a href="#scaling" class="hover:text-black">The Cost of Attention</a>
+              <a href="#takeaways" class="hover:text-black">Key Takeaways</a>
+            </nav>
+          </div>
+
+          <div class="border-t border-gray-200 pt-8">
+            <p class="text-[11px] font-semibold tracking-wider text-gray-400 uppercase mb-4">Related articles</p>
+            <div class="flex flex-col gap-2">
+              <a href="#" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <p class="text-sm font-medium mb-1">Transformer Architecture</p>
+                <p class="text-xs text-gray-500">6 min read</p>
+              </a>
+              <a href="#" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <p class="text-sm font-medium mb-1">Tokens &amp; Embeddings</p>
+                <p class="text-xs text-gray-500">5 min read</p>
+              </a>
+              <a href="#" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <p class="text-sm font-medium mb-1">Fine-tuning</p>
+                <p class="text-xs text-gray-500">7 min read</p>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
