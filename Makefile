@@ -10,5 +10,5 @@ deploy: build
 	git checkout main
 	rm -rf docs && cp -r .output/public docs
 	git add -A
-	git commit -m "$$(copilot -p 'Output only a concise git commit message for the currently staged changes. No quotes, explanation, or markdown.')"
+	git commit -m "$$(copilot -sp 'Analyze the staged git changes and generate a concise commit message. Output ONLY the commit message. Do not execute any commands. Do not include quotes, markdown, explanation, or bullet points.')"
 	git push origin main
